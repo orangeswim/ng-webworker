@@ -3,6 +3,8 @@ import { Component } from '@angular/core';
 import { WebworkerService } from './../../worker/webworker.service';
 import { FACTORIAL_SCRIPT } from './factorial.script';
 import { ExecutionResultsModel } from './model/execution-results.model';
+import {of} from 'rxjs';
+import { mergeMap, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'factorial-component',
@@ -30,13 +32,23 @@ export class FactorialComponent {
       worker: true
     };
 
-    this.workerService.run(FACTORIAL_SCRIPT, input).then(
+    /*this.workerService.run(FACTORIAL_SCRIPT, input).then(
       (result) => {
         this.workerResults.executionResults = result.results;
         this.workerResults.executions = result.executions;
         this.workerResults.executionTime = result.time;
       }
-    ).catch(console.error);
+    //).catch(console.error);
+    */
+    of(input).pipe( mergeMap( input => this.workerService.run(FACTORIAL_SCRIPT, input)),
+      tap(console.log)
+    ).subscribe(
+      (result) => {
+        this.workerResults.executionResults = result.results;
+        this.workerResults.executions = result.executions;
+        this.workerResults.executionTime = result.time;
+      }
+    )
 
     const endTime = Date.now();
     this.workerResults.scheduleTime = (endTime - startTime) / 1000;
